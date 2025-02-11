@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wikipedia Live Changes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #000;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        .change {
+            margin-bottom: 40px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 20px;
+            animation: fadeIn 1s ease-in;
+        }
+        .title {
+            font-size: 2em;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+        .diff {
+            font-family: Georgia, serif;
+            line-height: 1.6;
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+        .diff ins {
+            background-color: rgba(0, 255, 0, 0.15);
+            text-decoration: none;
+            color: #4eff4e;
+            padding: 0 3px;
+        }
+        .diff del {
+            background-color: rgba(255, 0, 0, 0.15);
+            text-decoration: none;
+            color: #ff4e4e;
+            padding: 0 3px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .new-page {
+            color: #4eff4e;  /* Same green as additions */
+            font-size: 2em;
+            margin-bottom: 40px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 20px;
+            animation: fadeIn 1s ease-in;
+        }
+    </style>
+</head>
+<body>
+    <div id="changes"></div>
+
+    <script>
+        const changesDiv = document.getElementById('changes');
+        
+        function addChanges(changes) {
+            changes.forEach(change => {
+                const changeDiv = document.createElement('div');
+                
+                if (change.isNew) {
+                    // Special handling for new pages
+                    changeDiv.className = 'new-page';
+                    changeDiv.textContent = change.title;  // Just show the title in green
+                } else {
+                    // Normal change handling
+                    changeDiv.className = 'change';
+                    changeDiv.innerHTML = `
+                        <div class="title">${change.title}</div>
+                        <div class="diff">${change.diff}</div>
+                    `;
+                }
+                
+                changesDiv.insertBefore(changeDiv, changesDiv.firstChild);
+                
+                // Keep only last 5 changes visible to prevent overwhelming the display
+                if (changesDiv.children.length > 5) {
+                    changesDiv.removeChild(changesDiv.lastChild);
+                }
+            });
+        }
+
+        const evtSource = new EventSource('/changes');
+        evtSource.onmessage = function(event) {
+            const changes = JSON.parse(event.data);
+            addChanges(changes);
+        };
+    </script>
+</body>
+</html> 
